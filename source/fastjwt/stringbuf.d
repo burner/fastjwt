@@ -9,6 +9,12 @@ struct StringBuffer {
 	size_t length;
 	bool copied;
 
+	~this() {
+		if(this.overflow !is null) {
+			GC.free(cast(void*)this.overflow);
+		}
+	}
+
 	struct OutputRange {
 		StringBuffer* buf;
 

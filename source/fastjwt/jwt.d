@@ -123,7 +123,7 @@ unittest {
 	writefln("buf2 %s\n", buf2.getData());
 }
 
-void buildJWTToken(Out, Args...)(ref Out output, JWTAlgorithm algo,
+void encodeJWTToken(Out, Args...)(ref Out output, JWTAlgorithm algo,
 		string secret, Args args)
 {
 	StringBuffer tmp;
@@ -142,6 +142,57 @@ void buildJWTToken(Out, Args...)(ref Out output, JWTAlgorithm algo,
 unittest {
     string secret = "supersecret";
 	StringBuffer buf;
-	buildJWTToken(buf, JWTAlgorithm.HS256, secret, "id", 1337);
+	encodeJWTToken(buf, JWTAlgorithm.HS256, secret, "id", 1337);
 	writefln("%s", buf.getData());
+}
+
+int decodeJWTToken(string encodedToken, string secret, 
+		JWTAlgorithm algo, ref StringBuffer header, ref StringBuffer payload) 
+{
+	import std.algorithm.iteration : splitter;
+	import std.string : indexOf;
+
+	ptrdiff_t[2] dots;
+	dots[0] = encodedToken.indexOf('.');
+
+	if(dots[0] == -1) {
+		return 1;
+	}
+
+	dots[1] = encodedToken.indexOf('.', dots[0] + 1);
+
+	if(dots[1] == -1) {
+		return 2;
+	}
+
+	StringBuffer h;
+	hash(h, encodedToken[0 .. dots[1]], secret, algo);
+
+	if(h.getData() != encodedToken[dots[1] + 1 .. $]) {
+		writefln("%s %s", h.getData(), encodedToken[dots[1] + 1 .. $]);
+		return 3;
+	}
+
+	Base64.decode(encodedToken[0 .. dots[0]], header.writer());
+	Base64.decode(encodedToken[dots[0] + 1 .. dots[1]], payload.writer());
+
+	return 4;
+}
+
+unittest {
+	import std.format : format;
+
+    string secret = "supersecret";
+	auto alg = JWTAlgorithm.HS256;
+	StringBuffer buf;
+	encodeJWTToken(buf, alg, secret, "id", 1337);
+	writefln("%s", buf.getData());
+
+	StringBuffer header;
+	StringBuffer payload;
+
+	int rslt = decodeJWTToken(buf.getData(), secret, alg, header, payload);
+	assert(rslt == 4, format("%d", rslt));
+	writeln(header.getData());
+	writeln(payload.getData());
 }
