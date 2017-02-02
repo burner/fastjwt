@@ -1,7 +1,7 @@
 {
 	"name": "fastjwt",
 	"authors": [
-		"Robert burenr Schadek"
+		"Robert burner Schadek"
 	],
 	"description": "A Simple and fast D implementation of JSON Web Tokens",
 	"copyright": "Copyright © 2017, Robert burner Schadek",
