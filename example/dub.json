@@ -1,0 +1,17 @@
+{
+	"authors": [
+		"burner"
+	],
+	"name": "example",
+	"license": "MIT",
+	"copyright": "Copyright © 2017, burner",
+	"description": "A simple vibe.d server application.",
+	"sourcePaths" : ["source", "../source"],
+	"importPaths" : ["source", "../source"],
+	"dependencies": {
+		"vibe-d": ">=0.8.0-beta.1"
+	},
+	"versions": [
+		"VibeDefaultMain"
+	]
+}

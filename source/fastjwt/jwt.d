@@ -46,7 +46,7 @@ void hash(ref StringBuffer buf, string data, string secret, JWTAlgorithm alg) {
 
 import std.base64;
 
-enum base64HeaderStrings = [
+const base64HeaderStrings = [
 	Base64.encode(cast(ubyte[])"{\"alg\":\"none\",\"typ\":\"JWT\"}"),
 	Base64.encode(cast(ubyte[])"{\"alg\":\"HS256\",\"typ\":\"JWT\"}"),
 	Base64.encode(cast(ubyte[])"{\"alg\":\"HS384\",\"typ\":\"JWT\"}"),
@@ -62,14 +62,12 @@ unittest {
 
 	StringBuffer buf;
 	headerBase64(JWTAlgorithm.HS256, buf);
-	writeln(buf.getData());
 }
 
 void payloadToBase64(Out)(ref Out output, const(Json) payload) {
 	StringBuffer jsonString;
 	auto w = jsonString.writer();
 	writeJsonString(w, payload);
-	//output.put(jsonString.getData());
 	Base64.encode(jsonString.getData!(ubyte[])(), output);
 }
 
@@ -105,7 +103,6 @@ void payloadToBase64(Out,Args...)(ref Out output, Args args)
 	w.put("}");
 
 	Base64.encode(jsonString.getData!(ubyte[])(), output.writer());
-	//output.put(jsonString.getData());
 }
 
 unittest {
@@ -119,8 +116,10 @@ unittest {
 	StringBuffer buf2;
 	payloadToBase64(buf2, "field1", "foo", "field2", 42, "field3", true);
 
-	writefln("buf  %s\n", buf.getData());
-	writefln("buf2 %s\n", buf2.getData());
+	auto a = Json(buf.getData());
+	auto b = Json(buf.getData());
+
+	assert(a == b);
 }
 
 void encodeJWTToken(Out, Args...)(ref Out output, JWTAlgorithm algo,
@@ -139,11 +138,30 @@ void encodeJWTToken(Out, Args...)(ref Out output, JWTAlgorithm algo,
 	output.put(h.getData());
 }
 
+void encodeJWTToken(Out)(ref Out output, JWTAlgorithm algo,
+		string secret, const(Json) args)
+{
+	StringBuffer tmp;
+	headerBase64(algo, tmp);
+	tmp.put('.');
+	payloadToBase64(tmp, args);
+
+	StringBuffer h;
+	hash(h, tmp.getData(), secret, algo);
+
+	output.put(tmp.getData());
+	output.put('.');
+	output.put(h.getData());
+}
+
 unittest {
     string secret = "supersecret";
 	StringBuffer buf;
 	encodeJWTToken(buf, JWTAlgorithm.HS256, secret, "id", 1337);
-	writefln("%s", buf.getData());
+
+	StringBuffer buf2;
+	Json j = Json(["id" : Json(1337)]);
+	encodeJWTToken(buf2, JWTAlgorithm.HS256, secret, j);
 }
 
 int decodeJWTToken(string encodedToken, string secret, 
@@ -169,14 +187,27 @@ int decodeJWTToken(string encodedToken, string secret,
 	hash(h, encodedToken[0 .. dots[1]], secret, algo);
 
 	if(h.getData() != encodedToken[dots[1] + 1 .. $]) {
-		writefln("%s %s", h.getData(), encodedToken[dots[1] + 1 .. $]);
 		return 3;
 	}
 
 	Base64.decode(encodedToken[0 .. dots[0]], header.writer());
 	Base64.decode(encodedToken[dots[0] + 1 .. dots[1]], payload.writer());
 
-	return 4;
+	return 0;
+}
+
+unittest {
+	auto s = ["asldjasldj","aslkdjas.asdlj","asdlj..alsdj"];
+	auto secret = "secret";
+	auto alg = JWTAlgorithm.HS256;
+
+	for(int i = 0; i < s.length; ++i) {
+		StringBuffer header;
+		StringBuffer payload;
+
+		auto rslt = decodeJWTToken(s[i], secret, alg, header, payload);
+		assert(rslt == i + 1);
+	}
 }
 
 unittest {
@@ -185,17 +216,14 @@ unittest {
     string secret = "supersecret";
 	auto alg = JWTAlgorithm.HS256;
 
-	for(int i = 0; i < 1024*128; ++i) {
+	for(int i = 0; i < 1024*2; ++i) {
 		StringBuffer buf;
 		encodeJWTToken(buf, alg, secret, "id", 1337);
-		//writefln("%s", buf.getData());
 
 		StringBuffer header;
 		StringBuffer payload;
 
 		int rslt = decodeJWTToken(buf.getData(), secret, alg, header, payload);
-		assert(rslt == 4, format("%d", rslt));
-		//writeln(header.getData());
-		//writeln(payload.getData());
+		assert(rslt == 0, format("%d", rslt));
 	}
 }

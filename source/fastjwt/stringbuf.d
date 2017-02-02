@@ -121,6 +121,27 @@ unittest {
 }
 
 unittest {
+	StringBuffer buf;
+	buf.put('ö');
+	assert(buf.getData() == "ö");
+
+	buf.writer().put('ö');
+	assert(buf.getData() == "öö");
+}
+
+unittest {
+	StringBuffer buf;
+	for(int i = 0; i < 1028; ++i) {
+		buf.put('a');
+	}
+
+	auto s = buf.getData();
+	for(int i = 0; i < s.length; ++i) {
+		assert(s[i] == 'a');
+	}
+}
+
+unittest {
 	import std.range.primitives : isOutputRange;
 	static assert(isOutputRange!(StringBuffer, char));
 }
@@ -143,4 +164,20 @@ unittest {
 	auto w = buf.writer();
 	writeJsonString(w, j1);
 	assert(buf.getData() == "{\"field2\":42}");
+}
+
+unittest {
+	string s = "0123456789";
+	string l;
+	for(int i = 0; i < 1026; ++i) {
+		l ~= s;
+	}
+
+	StringBuffer buf;
+	buf.put(l);
+
+	string ls = buf.getData();
+	for(int i = 0; i < ls.length; ++i) {
+		assert(ls[i] == ('0' + (i % 10)));
+	}
 }
