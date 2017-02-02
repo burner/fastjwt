@@ -184,15 +184,18 @@ unittest {
 
     string secret = "supersecret";
 	auto alg = JWTAlgorithm.HS256;
-	StringBuffer buf;
-	encodeJWTToken(buf, alg, secret, "id", 1337);
-	writefln("%s", buf.getData());
 
-	StringBuffer header;
-	StringBuffer payload;
+	for(int i = 0; i < 1024*128; ++i) {
+		StringBuffer buf;
+		encodeJWTToken(buf, alg, secret, "id", 1337);
+		//writefln("%s", buf.getData());
 
-	int rslt = decodeJWTToken(buf.getData(), secret, alg, header, payload);
-	assert(rslt == 4, format("%d", rslt));
-	writeln(header.getData());
-	writeln(payload.getData());
+		StringBuffer header;
+		StringBuffer payload;
+
+		int rslt = decodeJWTToken(buf.getData(), secret, alg, header, payload);
+		assert(rslt == 4, format("%d", rslt));
+		//writeln(header.getData());
+		//writeln(payload.getData());
+	}
 }
