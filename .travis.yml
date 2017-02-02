@@ -1,0 +1,14 @@
+language: d
+sudo: false
+
+matrix:
+  include:
+    - d: dmd-2.073.0
+    - d: dmd-2.072.0
+    - d: ldc-1.0.0
+
+script:
+  - dub test --compiler=${DC}
+
+notifications:
+  email: false
