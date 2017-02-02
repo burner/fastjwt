@@ -122,6 +122,16 @@ unittest {
 	assert(a == b);
 }
 
+/** Encode values into a JWTToken string that gets stored into the output
+parameter.
+
+Params:
+	output = The Output Range to store the JWTToken string
+	algo = The algorithm to encode the JWTToken with
+	secret = The secret to use to encode the JWTToken with
+	args = The values to encode into the JWTToken. Args must be come in pairs
+		of two. A string and a value.
+*/
 void encodeJWTToken(Out, Args...)(ref Out output, JWTAlgorithm algo,
 		string secret, Args args)
 {
@@ -138,6 +148,7 @@ void encodeJWTToken(Out, Args...)(ref Out output, JWTAlgorithm algo,
 	output.put(h.getData());
 }
 
+///
 void encodeJWTToken(Out)(ref Out output, JWTAlgorithm algo,
 		string secret, const(Json) args)
 {
@@ -154,6 +165,7 @@ void encodeJWTToken(Out)(ref Out output, JWTAlgorithm algo,
 	output.put(h.getData());
 }
 
+///
 unittest {
     string secret = "supersecret";
 	StringBuffer buf;
@@ -164,6 +176,16 @@ unittest {
 	encodeJWTToken(buf2, JWTAlgorithm.HS256, secret, j);
 }
 
+/** This function decodes a JWTToken.
+Params:
+	encodedToken = The Token
+	secret = The secret used to encode the JWTToken
+	algo = The algoirthm used to encode the JWTToken
+	header = The buffer to store the decoded Header of the JWTToken
+	payload = The buffer to store the decoded Payload of the JWTToken
+
+Returns: 0 if everything is ok, everything means the token is not ok
+*/
 int decodeJWTToken(string encodedToken, string secret, 
 		JWTAlgorithm algo, ref StringBuffer header, ref StringBuffer payload) 
 {
@@ -194,6 +216,23 @@ int decodeJWTToken(string encodedToken, string secret,
 	Base64.decode(encodedToken[dots[0] + 1 .. dots[1]], payload.writer());
 
 	return 0;
+}
+
+///
+unittest {
+	import std.format : format;
+
+    string secret = "supersecret";
+	auto alg = JWTAlgorithm.HS256;
+
+	StringBuffer buf;
+	encodeJWTToken(buf, alg, secret, "sub", 1337);
+
+	StringBuffer header;
+	StringBuffer payload;
+
+	int rslt = decodeJWTToken(buf.getData(), secret, alg, header, payload);
+	assert(rslt == 0, format("%d", rslt));
 }
 
 unittest {

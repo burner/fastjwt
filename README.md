@@ -1,3 +1,23 @@
+FastJWT
+=======
+
+![alt text](https://travis-ci.org/burner/fastjwt.svg?branch=master)
+
+FastJWT is a very fast, vibe.d focused Json Web Token (JWT) implementation that 
+tries to avoid the use of the GC. If the the JWT is shorter than 512 charaters no
+memory will be allocated. If it is longer the memory will be automatically
+allocated and free by the used StringBuffer.
+
+Example
+=======
+
+The following example shows an examplary use of the fastjwt library in
+combiation with vibe.d.
+To use the /secureapi endpoint the JWT created by the /login entpoint needs to
+be send to the in the request header in the authentication field with the
+Bearer prefix to.
+
+```d
 import vibe.d;
 
 import fastjwt.jwt;
@@ -67,3 +87,4 @@ void validator(alias fun)(HTTPServerRequest req,
 void securedApi(HTTPServerRequest req, HTTPServerResponse res) {
 	res.writeBody("Here is your secure api!");
 }
+```

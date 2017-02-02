@@ -1,5 +1,11 @@
 module fastjwt.stringbuf;
 
+/** A super simple string buffer that will free its string if its gets out of
+scope. To use it as a OutputRange use the value returned from the writer
+method. getData will return a string that points to the data stored in the
+StringBuffer. If the StringBuffer gets cleared up the string returned by
+getData can no longer be used.
+*/
 struct StringBuffer {
 	import core.memory : GC;
 	enum stackLen = 512;
