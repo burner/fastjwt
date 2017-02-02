@@ -195,7 +195,7 @@ unittest {
 
 		int rslt = decodeJWTToken(buf.getData(), secret, alg, header, payload);
 		assert(rslt == 4, format("%d", rslt));
-		//writeln(header.getData());
-		//writeln(payload.getData());
+		writeln(header.getData());
+		writeln(payload.getData());
 	}
 }

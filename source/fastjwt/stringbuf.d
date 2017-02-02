@@ -40,20 +40,25 @@ struct StringBuffer {
 	}
 
 	private void putImpl(const(char) c) @trusted {
-		if(length < stackLen) {
+		if(this.length < stackLen) {
 			this.stack[this.length++] = c;
 		} else {
-			if(length >= capacity) {
-				this.capacity *= 2;
-				this.overflow = cast(char*)GC.realloc(this.overflow, this.capacity);
-			}
-			if(!this.copied) {
-				for(size_t i = 0; i < stackLen; ++i) {
-					this.overflow[i] = this.stack[i];
-				}
-				this.copied = true;
+			if(this.length + 1 >= this.capacity || this.overflow is null) {
+				this.grow();
+				assert(this.overflow !is null);
 			}
 			this.overflow[this.length++] = c;
+		}
+	}
+
+	private void grow() @trusted {
+		this.capacity *= 2;
+		this.overflow = cast(char*)GC.realloc(this.overflow, this.capacity);
+		if(!this.copied) {
+			for(size_t i = 0; i < stackLen; ++i) {
+				this.overflow[i] = this.stack[i];
+			}
+			this.copied = true;
 		}
 	}
 
@@ -65,21 +70,29 @@ struct StringBuffer {
 		import std.utf : encode;
 		char[4] encoded;
 		size_t len = encode(encoded, c);
-		for(size_t i = 0; i < len; ++i) {
-			this.put(encoded[i]);
-		}
+		this.put(encoded[0 .. len]);
 	}
 
-	void put(const(char)[] s) @safe {
-		for(size_t i = 0; i < s.length; ++i) {
-			this.put(s[i]);
+	void put(const(char)[] s) @trusted {
+		if(s.length + this.length < stackLen) {
+			for(size_t i = 0; i < s.length; ++i) {
+				this.stack[this.length++] = s[i];
+			}
+		} else {
+			while(s.length + this.length >= this.capacity 
+					|| this.overflow is null) 
+			{
+				this.grow();
+				assert(this.overflow !is null);
+			}
+			for(size_t i = 0; i < s.length; ++i) {
+				this.overflow[this.length++] = s[i];
+			}
 		}
 	}
 
 	void put(string s) @safe {
-		for(size_t i = 0; i < s.length; ++i) {
-			this.put(s[i]);
-		}
+		this.put(cast(const(char)[])s);
 	}
 
 	T getData(T = string)() {
