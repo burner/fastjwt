@@ -2,6 +2,7 @@ FastJWT
 =======
 
 ![alt text](https://travis-ci.org/burner/fastjwt.svg?branch=master)
+<a href="https://code.dlang.org/packages/fastjwt" title="Go to fastjwt"><img src="https://img.shields.io/dub/v/fastjwt.svg" alt="Dub version"></a>
 
 FastJWT is a very fast, vibe.d focused Json Web Token (JWT) implementation that 
 tries to avoid the use of the GC. If the the JWT is shorter than 512 charaters no
