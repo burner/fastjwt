@@ -9,6 +9,13 @@ tries to avoid the use of the GC. If the the JWT is shorter than 512 charaters n
 memory will be allocated. If it is longer the memory will be automatically
 allocated and free by the used StringBuffer.
 
+Performance comparision with LDC calling encode/decode 50000 times:
+https://github.com/burner/dlang_jwt_benchmark
+
+fastjwt : 309 ms, 474 μs, and 3 hnsecs
+jwtd : 499 ms, 281 μs, and 9 hnsecs
+jwt : 2 secs, 233 ms, 331 μs, and 3 hnsecs
+
 Example
 =======
 
