@@ -2,7 +2,8 @@ module fastjwt.jwt;
 
 import vibe.data.json;
 
-import fastjwt.stringbuf;
+//import fastjwt.stringbuf;
+import stringbuffer;
 
 version(unittest) {
 	import std.stdio;
@@ -27,17 +28,17 @@ void hash(ref StringBuffer buf, string data, string secret, JWTAlgorithm alg) {
 		case JWTAlgorithm.HS256:
 			auto signature = HMAC!SHA256(secret.representation);
 			signature.put(data.representation);
-			buf.put(URLSafeBase64.encode(signature.finish()));
+			buf.insertBack(URLSafeBase64.encode(signature.finish()));
 			break;
 		case JWTAlgorithm.HS384:
 			auto signature = HMAC!SHA384(secret.representation);
 			signature.put(data.representation);
-			buf.put(URLSafeBase64.encode(signature.finish()));
+			buf.insertBack(URLSafeBase64.encode(signature.finish()));
 			break;
 		case JWTAlgorithm.HS512:
 			auto signature = HMAC!SHA512(secret.representation);
 			signature.put(data.representation);
-			buf.put(URLSafeBase64.encode(signature.finish()));
+			buf.insertBack(URLSafeBase64.encode(signature.finish()));
 			break;
 		case JWTAlgorithm.NONE:
 			break;
@@ -54,7 +55,7 @@ const base64HeaderStrings = [
 ];
 
 void headerBase64(Out)(const JWTAlgorithm alg, ref Out output) {
-	output.put(base64HeaderStrings[alg]);
+	output.insertBack(base64HeaderStrings[alg]);
 }
 
 unittest {
@@ -68,7 +69,7 @@ void payloadToBase64(Out)(ref Out output, const(Json) payload) {
 	StringBuffer jsonString;
 	auto w = jsonString.writer();
 	writeJsonString(w, payload);
-	Base64.encode(jsonString.getData!(ubyte[])(), output);
+	Base64.encode(jsonString.getData!(ubyte[])(), output.writer());
 }
 
 void payloadToBase64(Out,Args...)(ref Out output, Args args) 
@@ -137,15 +138,15 @@ void encodeJWTToken(Out, Args...)(ref Out output, JWTAlgorithm algo,
 {
 	StringBuffer tmp;
 	headerBase64(algo, tmp);
-	tmp.put('.');
+	tmp.insertBack('.');
 	payloadToBase64(tmp, args);
 
 	StringBuffer h;
 	hash(h, tmp.getData(), secret, algo);
 
-	output.put(tmp.getData());
-	output.put('.');
-	output.put(h.getData());
+	output.insertBack(tmp.getData());
+	output.insertBack('.');
+	output.insertBack(h.getData());
 }
 
 ///
@@ -154,26 +155,28 @@ void encodeJWTToken(Out)(ref Out output, JWTAlgorithm algo,
 {
 	StringBuffer tmp;
 	headerBase64(algo, tmp);
-	tmp.put('.');
+	tmp.insertBack('.');
 	payloadToBase64(tmp, args);
 
 	StringBuffer h;
 	hash(h, tmp.getData(), secret, algo);
 
-	output.put(tmp.getData());
-	output.put('.');
-	output.put(h.getData());
+	output.insertBack(tmp.getData());
+	output.insertBack('.');
+	output.insertBack(h.getData());
 }
 
 ///
 unittest {
-    string secret = "supersecret";
-	StringBuffer buf;
-	encodeJWTToken(buf, JWTAlgorithm.HS256, secret, "id", 1337);
+	foreach(alg; [JWTAlgorithm.HS384, JWTAlgorithm.HS256, JWTAlgorithm.HS512]) {
+    	string secret = "supersecret";
+		StringBuffer buf;
+		encodeJWTToken(buf, alg, secret, "id", 1337);
 
-	StringBuffer buf2;
-	Json j = Json(["id" : Json(1337)]);
-	encodeJWTToken(buf2, JWTAlgorithm.HS256, secret, j);
+		StringBuffer buf2;
+		Json j = Json(["id" : Json(1337)]);
+		encodeJWTToken(buf2, alg, secret, j);
+	}
 }
 
 /** This function decodes a JWTToken.
