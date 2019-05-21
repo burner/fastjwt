@@ -9,7 +9,8 @@
 	"sourcePaths" : ["source", "../source"],
 	"importPaths" : ["source", "../source"],
 	"dependencies": {
-		"vibe-d": ">=0.8.0-beta.1"
+		"vibe-d": ">=0.8.3",
+		"stringbuffer": ">=1.1.2"
 	},
 	"versions": [
 		"VibeDefaultMain"

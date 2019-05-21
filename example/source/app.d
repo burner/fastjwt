@@ -1,7 +1,7 @@
 import vibe.d;
 
 import fastjwt.jwt;
-import fastjwt.stringbuf;
+import stringbuffer;
 
 string secret = "SuperStrongPassword";
 JWTAlgorithm algo = JWTAlgorithm.HS512;

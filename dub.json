@@ -7,7 +7,7 @@
 	"copyright": "Copyright © 2017, Robert burner Schadek",
 	"license": "LGPL",
 	"dependencies" : {
-		"vibe-d:data": "*",
-		"stringbuffer": ">=1.0.0"
+		"vibe-d:data": ">=0.8.3",
+		"stringbuffer": ">=1.1.2"
 	}
 }
