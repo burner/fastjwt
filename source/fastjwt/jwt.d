@@ -4,6 +4,7 @@ import vibe.data.json;
 
 //import fastjwt.stringbuf;
 import stringbuffer;
+import std.base64 : Base64Impl, Base64;
 
 version(unittest) {
 	import std.stdio;
@@ -16,13 +17,12 @@ enum JWTAlgorithm {
     HS512
 }
 
+alias URLSafeBase64 = Base64Impl!('-', '_', Base64.NoPadding);
+
 void hash(ref StringBuffer buf, string data, string secret, JWTAlgorithm alg) {
 	import std.digest.hmac;
 	import std.digest.sha;
 	import std.string : representation;
-	import std.base64 : Base64Impl;
-
-	alias URLSafeBase64 = Base64Impl!('-', '_', Base64.NoPadding);
 
 	final switch(alg) {
 		case JWTAlgorithm.HS256:
@@ -45,13 +45,11 @@ void hash(ref StringBuffer buf, string data, string secret, JWTAlgorithm alg) {
 	}
 }
 
-import std.base64;
-
 const base64HeaderStrings = [
-	Base64.encode(cast(ubyte[])"{\"alg\":\"none\",\"typ\":\"JWT\"}"),
-	Base64.encode(cast(ubyte[])"{\"alg\":\"HS256\",\"typ\":\"JWT\"}"),
-	Base64.encode(cast(ubyte[])"{\"alg\":\"HS384\",\"typ\":\"JWT\"}"),
-	Base64.encode(cast(ubyte[])"{\"alg\":\"HS512\",\"typ\":\"JWT\"}")
+	URLSafeBase64.encode(cast(ubyte[])"{\"alg\":\"none\",\"typ\":\"JWT\"}"),
+	URLSafeBase64.encode(cast(ubyte[])"{\"alg\":\"HS256\",\"typ\":\"JWT\"}"),
+	URLSafeBase64.encode(cast(ubyte[])"{\"alg\":\"HS384\",\"typ\":\"JWT\"}"),
+	URLSafeBase64.encode(cast(ubyte[])"{\"alg\":\"HS512\",\"typ\":\"JWT\"}")
 ];
 
 void headerBase64(Out)(const JWTAlgorithm alg, ref Out output) {
@@ -72,7 +70,7 @@ void payloadToBase64(Out)(ref Out output, const(Json) payload) {
 	Base64.encode(jsonString.getData!(ubyte[])(), output.writer());
 }
 
-void payloadToBase64(Out,Args...)(ref Out output, Args args) 
+void payloadToBase64(Out,Args...)(ref Out output, Args args)
 		if(args.length > 0 && args.length % 2 == 0 && !is(args[0] == Json))
 {
 	import std.format : formattedWrite;
@@ -91,7 +89,7 @@ void payloadToBase64(Out,Args...)(ref Out output, Args args)
 		} else static if(is(S == bool)) {
 			formattedWrite(loutput, "\"%s\":%s", t, s);
 		}
-		
+
 		static if(args.length > 0) {
 			impl(loutput, false, args);
 		}
@@ -102,12 +100,11 @@ void payloadToBase64(Out,Args...)(ref Out output, Args args)
 	w.put("{");
 	impl(w, true, args);
 	w.put("}");
-
-	Base64.encode(jsonString.getData!(ubyte[])(), output.writer());
+	URLSafeBase64.encode(jsonString.getData!(ubyte[])(), output.writer());
 }
 
 unittest {
-	Json j1 = Json(["field1": Json("foo"), "field2": Json(42), 
+	Json j1 = Json(["field1": Json("foo"), "field2": Json(42),
 			"field3": Json(true)]
 		);
 
@@ -189,8 +186,8 @@ Params:
 
 Returns: 0 if everything is ok, everything means the token is not ok
 */
-int decodeJWTToken(string encodedToken, string secret, 
-		JWTAlgorithm algo, ref StringBuffer header, ref StringBuffer payload) 
+int decodeJWTToken(string encodedToken, string secret,
+		JWTAlgorithm algo, ref StringBuffer header, ref StringBuffer payload)
 {
 	import std.algorithm.iteration : splitter;
 	import std.string : indexOf;
@@ -215,8 +212,8 @@ int decodeJWTToken(string encodedToken, string secret,
 		return 3;
 	}
 
-	Base64.decode(encodedToken[0 .. dots[0]], header.writer());
-	Base64.decode(encodedToken[dots[0] + 1 .. dots[1]], payload.writer());
+	URLSafeBase64.decode(encodedToken[0 .. dots[0]], header.writer());
+	URLSafeBase64.decode(encodedToken[dots[0] + 1 .. dots[1]], payload.writer());
 
 	return 0;
 }
