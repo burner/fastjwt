@@ -67,7 +67,7 @@ void payloadToBase64(Out)(ref Out output, const(Json) payload) {
 	StringBuffer jsonString;
 	auto w = jsonString.writer();
 	writeJsonString(w, payload);
-	Base64.encode(jsonString.getData!(ubyte[])(), output.writer());
+	URLSafeBase64.encode(jsonString.getData!(ubyte[])(), output.writer());
 }
 
 void payloadToBase64(Out,Args...)(ref Out output, Args args)
